@@ -18,6 +18,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
+import android.src.main.java.id.flutter.flutter_background_service.NotificationDismissListenerService;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -57,6 +58,8 @@ public class BackgroundService extends Service implements MethodChannel.MethodCa
     private String notificationChannelId;
     private int notificationId;
     private Handler mainHandler;
+
+    private NotificationDismissListenerService.DismissListenerServiceConnection dismissServiceConnection;
 
     synchronized public static PowerManager.WakeLock getLock(Context context) {
         if (lockStatic == null) {
@@ -102,6 +105,11 @@ public class BackgroundService extends Service implements MethodChannel.MethodCa
         notificationId = config.getForegroundNotificationId();
         updateNotificationInfo();
         onStartCommand(null, -1, -1);
+
+        // Bind to the NotificationDismissListenerService
+        dismissServiceConnection = new NotificationDismissListenerService.DismissListenerServiceConnection();
+        Intent dismissServiceIntent = new Intent(this, NotificationDismissListenerService.class);
+        bindService(dismissServiceIntent, dismissServiceConnection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -123,6 +131,12 @@ public class BackgroundService extends Service implements MethodChannel.MethodCa
         methodChannel = null;
         dartEntrypoint = null;
         FlutterBackgroundServicePlugin.servicePipe.removeListener(listener);
+
+        // Unbind from the NotificationDismissListenerService
+        if (dismissServiceConnection != null) {
+            unbindService(dismissServiceConnection);
+        }
+
         super.onDestroy();
     }
 
