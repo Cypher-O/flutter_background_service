@@ -1,5 +1,10 @@
 package android.src.main.java.id.flutter.flutter_background_service;
 
+import android.app.Notification;
+import android.app.Service;
+import android.content.ComponentName;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
